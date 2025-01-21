@@ -26,14 +26,15 @@ public class NBDrawApp1 extends JFrame
     private int freehandPixelsCount = 0;
     private int freehandSize = 5;
     
-    private final int MAX_SHAPES = 10;
-    private int[][] rectangle = new int[MAX_SHAPES][4];
-    private int[][] oval = new int[MAX_SHAPES][4];
-    private int[][] lines = new int[MAX_SHAPES][4];
+    private final int MAX_SHAPES = 50;
+    private int[][] rectangle = new int[MAX_SHAPES][5];
+    private int[][] oval = new int[MAX_SHAPES][5];
+    private int[][] lines = new int[MAX_SHAPES][5];
     private int rectCount = 0;
     private int ovalCount = 0;
     private int lineCount = 0;
     private int startX,startY;
+    private int tempX, tempY, tempWidth, tempHeight;
     
 
 
@@ -63,6 +64,8 @@ public class NBDrawApp1 extends JFrame
     private Color[] rectColor = new Color[MAX_SHAPES];
     private Color[] ovalColor = new Color[MAX_SHAPES];
     private Color[] lineColor = new Color[MAX_SHAPES];
+    private boolean isMousePressed = false;
+
     
     private JTextArea messageArea;
     
@@ -75,6 +78,14 @@ public class NBDrawApp1 extends JFrame
     //Mouse motion event
     
         public void mousePressed(MouseEvent event){
+            tempX = event.getX();
+            tempY = event.getY();
+            tempHeight = 0;
+            startX = event.getX();
+            startY = event.getY(); 
+            
+            isMousePressed = true;
+
             
             if(freehandRadioButton.isSelected()&& freehandPixelsCount< MAX_FREEHAND_PIXELS){
                 int x = event.getX();
@@ -97,11 +108,14 @@ public class NBDrawApp1 extends JFrame
             
                startX = event.getX();
                startY = event.getY();
+               canvas.repaint();
             }
 
       }
  }
-                public void mouseReleased(MouseEvent event){
+      public void mouseReleased(MouseEvent event){
+          isMousePressed = false;
+          
             if (rectangleRadioButton.isSelected()) {
                 rectCount++; 
             canvas.repaint();}
@@ -126,6 +140,7 @@ public class NBDrawApp1 extends JFrame
             coordinatesLabel.setText("Mouse Position is: "+x+","+y);
         }
         public void mouseDragged(MouseEvent event){
+            if (isMousePressed){
             if(freehandRadioButton.isSelected()&& freehandPixelsCount<MAX_FREEHAND_PIXELS){
             int x = event.getX();
             int y = event.getY();
@@ -149,21 +164,25 @@ public class NBDrawApp1 extends JFrame
                         int endX = event.getX();
                         int endY = event.getY();
                        
-                        rectangle[rectCount][0] = Math.min(startX, endX);
-                        rectangle[rectCount][1] = Math.min(startY, endY);
-                        rectangle[rectCount][2] = Math.abs(endX - startX);
-                        rectangle[rectCount][3] = Math.abs(endY - startY);
-                        rectColor[rectCount]= SelectedColour;
+                        rectangle[rectCount][0] = tempX = Math.min(startX, endX);
+                        rectangle[rectCount][1] = tempY = Math.min(startY, endY);
+                        rectangle[rectCount][2] = tempWidth = Math.abs(endX - startX);
+                        rectangle[rectCount][3] = tempHeight = Math.abs(endY - startY);
+                        rectangle[rectCount][4] = freehandSizeSlider.getValue(); 
+                        canvas.repaint();
+          
                     }
                     else if (ovalRadioButton.isSelected()){
                         int endX = event.getX();
                         int endY = event.getY();
                         
-                        oval[ovalCount][0] = Math.min(startX, endY);
-                        oval[ovalCount][1] = Math.min(startY, endY);
-                        oval[ovalCount][2] = Math.abs(endX - startX);
-                        oval[ovalCount][3] = Math.abs(endY - startY);
-                        ovalColor[ovalCount]=SelectedColour;
+                        oval[ovalCount][0] = tempX = Math.min(startX, endY);
+                        oval[ovalCount][1] = tempY = Math.min(startY, endY);
+                        oval[ovalCount][2] = tempWidth = Math.abs(endX - startX);
+                        oval[ovalCount][3] = tempHeight = Math.abs(endY - startY);
+                        oval[ovalCount][4] = freehandSizeSlider.getValue();
+                        canvas.repaint();
+                       
                     }
                     else if(lineRadioButton.isSelected()){
                        int endX = event.getX();
@@ -171,16 +190,20 @@ public class NBDrawApp1 extends JFrame
                        
                        lines[lineCount][0] = startX;
                        lines[lineCount][1] = startY;
-                       lines[lineCount][2] = endX;
-                       lines[lineCount][3] = endY;
-                       lineColor[lineCount]=SelectedColour;
-                    }
+                       lines[lineCount][2] = tempX = endX;
+                       lines[lineCount][3] = tempY = endY;
+                       lines[lineCount][4] = freehandSizeSlider.getValue();
+                       canvas.repaint();
+                       
+                      
+                    }canvas.repaint();
                   int shapeCount= rectCount + ovalCount + lineCount;
                   int remainingShapes= MAX_SHAPES - shapeCount;
                   messageArea.setText("You have "+remainingShapes+" Freehand left ...");
-                    canvas.repaint();
+                   canvas.repaint();
             }
 
+        }
         }
         
         public void mouseClicked(MouseEvent event){
@@ -192,6 +215,7 @@ public class NBDrawApp1 extends JFrame
         public void mouseExited(MouseEvent event){
             
         }
+        public void mouseReleased(MouseEvent event){}
        
     }
     class FreehandSliderListener implements ChangeListener{
@@ -286,6 +310,8 @@ public class NBDrawApp1 extends JFrame
          drawingToolsPanel.add(ovalRadioButton);
          lineRadioButton = new JRadioButton("Line");
          drawingToolsPanel.add(lineRadioButton);
+         freehandRadioButton = new JRadioButton("Free Hand");
+         drawingToolsPanel.add(freehandRadioButton);
          
         
         // Freehand trace size slider
@@ -304,9 +330,7 @@ public class NBDrawApp1 extends JFrame
         
         freehandSliderPanel.add(freehandSizeSlider);
         freehandSliderPanel.add(new JLabel("Size: "+ freehandSizeSlider.getValue()));
-               //RadioButton
-          freehandRadioButton = new JRadioButton("Free Hand");
-         freehandSliderPanel.add( freehandRadioButton);
+
 
                  //Button to group the radio button 
         
@@ -362,13 +386,21 @@ public class NBDrawApp1 extends JFrame
        
        @Override
        public void actionPerformed(ActionEvent e){
+               tempX = 0;
+               tempY = 0;
+               tempWidth = 0;
+               tempHeight = 0;
+               startX = 0;
+               startY = 0;
             freehandPixelsCount= 0;
             rectCount=0;
             ovalCount=0;
             lineCount=0;
+     
             canvas.repaint();
             
-            messageArea.setText("Canvas Cleared you have "+MAX_FREEHAND_PIXELS+" left & "+ MAX_SHAPES+" Shapes Left!!!");
+            messageArea.setText("Canvas Cleared! You have " + MAX_FREEHAND_PIXELS + " Freehand left & " + MAX_SHAPES + " Shapes Left!!!");
+            canvas.repaint();
     
 
 
@@ -407,62 +439,9 @@ public class NBDrawApp1 extends JFrame
     
     // Called by the canvas' paintComponent method
     void draw(Graphics g){
-        
-       // g.setColor(new Color(1.0F, 0.6F, 0.5F));
-        //g.drawLine(20,50, 100,210);
-        if (fineCheckBox.isSelected()){
-        //the 10 pixels lines
-        g.setColor(new Color(0.8F,0.8F,0.8F));
-        for(int x =0; x < canvas.getWidth(); x+=10){
-            g.drawLine(x, 0, x, canvas.getHeight());
-        }
-        for(int y = 0; y < canvas.getHeight(); y+=10){
-            g.drawLine(0, y, canvas.getWidth(),y);
-        }
-        }
-        
-    
-        if(coarseCheckBox.isSelected()){
-        //the 50 pixels line
-        g.setColor(new Color(0.6F,0.6F,0.6F));
-        for(int x = 0; x < canvas.getWidth();x+=50){
-            g.drawLine(x, 0, x, canvas.getHeight());
-        }
-        for(int y = 0; y< canvas.getHeight(); y+=50){
-            g.drawLine( 0,y, canvas.getWidth(),y);
-        }
-        }
-        
-        // freehand radio
-            for(int i = 0; i < freehandPixelsCount;i++){
-            g.setColor(freehandColour[i]);
-            int size = fxy[i][2];
-            g.fillRect(fxy[i][0], fxy[i][1], size,size);  // Draws squares
-
-        }
-            for(int i=0; i<rectCount; i++){
-                if(rectangle[i][2]> 0 &&rectangle[i][3]>0){
-                g.setColor(rectColor[i]);
-            g.drawRect(rectangle[i][0],rectangle[i][1],rectangle[i][2],rectangle[i][3]);
-        }}
-        
-            for(int i=0; i< ovalCount;i++){
-                if(oval[i][2]>0 &&oval[i][3]>0){
-                g.setColor(ovalColor[i]);  
-            g.drawOval(oval[i][0],oval[i][1],oval[i][2],oval[i][3]);
- 
-            
-        }}
-
-            for(int i =0; i<lineCount; i++){
-                g.setColor(lineColor[i]);
-            g.drawLine(lines[i][0],lines[i][1],lines[i][2],lines[i][3]);
-         }
-       
-        
- 
-        
-        //Gird CheckBox event
+            Graphics2D g2 = (Graphics2D) g;
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+          //Gird CheckBox event
         
         fineCheckBox.addChangeListener(new ChangeListener(){
             public void stateChanged(ChangeEvent e){
@@ -503,11 +482,92 @@ public class NBDrawApp1 extends JFrame
         });
 
         
+       // g.setColor(new Color(1.0F, 0.6F, 0.5F));
+        //g.drawLine(20,50, 100,210);
+        if (fineCheckBox.isSelected()){
+        //the 10 pixels lines
+        g2.setColor(new Color(0.8F,0.8F,0.8F));
+        for(int x =0; x < canvas.getWidth(); x+=10){
+            g2.drawLine(x, 0, x, canvas.getHeight());
+        }
+        for(int y = 0; y < canvas.getHeight(); y+=10){
+            g2.drawLine(0, y, canvas.getWidth(),y);
+        }
+        }
+        
+    
+        if(coarseCheckBox.isSelected()){
+        //the 50 pixels line
+        g2.setColor(new Color(0.6F,0.6F,0.6F));
+        for(int x = 0; x < canvas.getWidth();x+=50){
+            g2.drawLine(x, 0, x, canvas.getHeight());
+        }
+        for(int y = 0; y < canvas.getHeight(); y+=50){
+            g2.drawLine( 0,y, canvas.getWidth(),y);
+        }
+        }
+                   
+             // Drawing temporary (rubber-banding) rectangle
+    if (rectangleRadioButton.isSelected() && isMousePressed) {
+        g2.setColor(SelectedColour);
+        g2.setStroke(new BasicStroke(freehandSizeSlider.getValue()));
+        g2.drawRect(tempX, tempY, tempWidth, tempHeight);
+        canvas.repaint();
+    }
 
-        
+    // Drawing temporary (rubber-banding) oval
+    if (ovalRadioButton.isSelected() && isMousePressed) {
+        g2.setColor(SelectedColour);
+        g2.setStroke(new BasicStroke(freehandSizeSlider.getValue()));
+        g2.drawOval(tempX, tempY, tempWidth, tempHeight);
+        canvas.repaint();
+    }
 
+    // Drawing temporary (rubber-banding) line
+    if (lineRadioButton.isSelected() && isMousePressed) {
+        g2.setColor(SelectedColour);
+        g2.setStroke(new BasicStroke(freehandSizeSlider.getValue()));
+        g2.drawLine(startX, startY, tempX, tempY);
+        canvas.repaint();
+    }
+      
         
+        // freehand radio
+            for(int i = 0; i < freehandPixelsCount;i++){
+            g2.setColor(freehandColour[i]);
+            g2.setStroke(new BasicStroke(fxy[i][2]));
+            g2.fillRect(fxy[i][0], fxy[i][1], fxy[i][2], fxy[i][2]);  // Draws squares
+
+        }
+            for(int i=0; i < rectCount; i++){
+                if(rectangle[i][2]> 0 &&rectangle[i][3]>0){
+                g2.setColor(rectColor[i]);
+                g2.setStroke(new BasicStroke(rectangle[i][4])); 
+            g2.drawRect(rectangle[i][0],rectangle[i][1],rectangle[i][2],rectangle[i][3]);
+            
+        }
+            }
         
+            for(int i=0; i < ovalCount;i++){
+                if(oval[i][2]>0 &&oval[i][3]>0){
+                g2.setColor(ovalColor[i]);  
+                g2.setStroke(new BasicStroke(oval[i][4])); 
+            g2.drawOval(oval[i][0],oval[i][1],oval[i][2],oval[i][3]);
+            
+ 
+            
+        }
+            }
+
+            for(int i =0; i<lineCount; i++){
+                g2.setColor (lineColor[i]);
+                g2.setStroke(new BasicStroke(lines[i][4])); 
+            g2.drawLine(lines[i][0],lines[i][1],lines[i][2],lines[i][3]);
+            
+         }
+  
+        
+  
         
     } // end draw method   
 
