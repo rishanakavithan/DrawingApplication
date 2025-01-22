@@ -9,6 +9,8 @@ import javax.swing.border.*;
 import javax.swing.event.*;
 import java.io.*;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static jdk.internal.org.jline.utils.Colors.h;
 
 
@@ -254,18 +256,156 @@ public class NBDrawApp1 extends JFrame
           JMenu fileMenu = new JMenu("File");
             JMenuItem fileSaveMenuItem = new JMenuItem("Save");
             fileMenu.add(fileSaveMenuItem);
+            
+            fileSaveMenuItem.addActionListener(new ActionListener (){
+                
+                public void actionPerformed(ActionEvent e){
+                    try{
+                        //To save to the users chosen file and file name
+                        
+                        JFileChooser fileChooser= new JFileChooser();
+                        fileChooser.setDialogTitle("Save your Drawing!!");
+                        
+                        int userSelection = fileChooser.showSaveDialog(null);
+                        
+                        if(userSelection == JFileChooser.APPROVE_OPTION){
+                            File file =fileChooser.getSelectedFile();
+                            
+                            if(!file.getName().endsWith(".dat")){
+                                file = new File(file.getAbsolutePath() + ".dat");
+                            }
+                        
+                        
+                        
+                    FileOutputStream fos = new FileOutputStream(file);
+                    ObjectOutputStream fh = new ObjectOutputStream(fos);
+                    
+                    fh.writeInt(rectCount);
+                    fh.writeObject(rectangle);
+                    fh.writeObject(rectColor);
+                    
+                    fh.writeInt(ovalCount);
+                    fh.writeObject(oval);
+                    fh.writeObject(ovalColor);
+                    
+                    fh.writeInt(lineCount);
+                    fh.writeObject(lines);
+                    fh.writeObject(lineColor);
+                    
+                    fh.writeInt(freehandPixelsCount);
+                    fh.writeObject(fxy);
+                    fh.writeObject(freehandColour);
+                    
+                    fh.close();
+                    fos.close();
+                    
+                    JOptionPane.showMessageDialog(null,"Your Drawing is saved to"+ file.getAbsolutePath());
+                        }  
+                }catch(IOException ex){
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null,"Can't Save your Drawing");
+                }
+               }
+            });
+            
+  
+            
             JMenuItem fileLoadMenuItem = new JMenuItem("Load");
             fileMenu.add(fileLoadMenuItem);
+            
+            fileLoadMenuItem.addActionListener(new ActionListener(){
+                
+                public void actionPerformed(ActionEvent e){
+                     
+                    
+                    try{                        
+                        JFileChooser fileChooser= new JFileChooser();
+                        fileChooser.setDialogTitle("Load your Drawing!!");
+                        
+                        System.out.println("Displaying file chooser...");
+                        
+                        int userSelection = fileChooser.showOpenDialog(null);
+                        
+                        if(userSelection == JFileChooser.APPROVE_OPTION){
+                            File file =fileChooser.getSelectedFile();
+                            
+                            if(!file.getName().endsWith(".dat")){
+                                file = new File(file.getAbsolutePath() + ".dat");
+                            }
+                    
+                    FileInputStream fis = new FileInputStream(file);
+                    ObjectInputStream fh = new ObjectInputStream(fis);
+                    
+                    rectCount = (int) fh.readInt();
+                    rectangle = (int[][])fh.readObject();
+                    rectColor = (Color[])fh.readObject();
+                    
+                    ovalCount = (int) fh.readInt();
+                    oval = (int[][])fh.readObject();
+                    ovalColor = (Color[])fh.readObject();
+                    
+                    lineCount = (int) fh.readInt();
+                    lines = (int[][])fh.readObject();
+                    lineColor = (Color[])fh.readObject();
+                    
+                   freehandPixelsCount = (int) fh.readInt();
+                    fxy = (int[][])fh.readObject();
+                    freehandColour = (Color[])fh.readObject();
+                    
+                    fh.close();
+                    fis.close();
+                    
+                    canvas.repaint();
+                    
+                    JOptionPane.showMessageDialog(null,"Your Drawing is being opened");
+                    
+                    System.out.println("Loaded rectCount: " + rectCount);
+                    System.out.println("Loaded rectangle[0]: " + rectangle[0][0]);
+                    System.out.println("Loaded color: " + rectColor[0]);
+
+      
+                    
+                }else {
+                System.out.println("User canceled the file chooser.");
+            }
+                }   catch (ClassNotFoundException ex) {
+                        Logger.getLogger(NBDrawApp1.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(NBDrawApp1.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException ex) {
+                        Logger.getLogger(NBDrawApp1.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+    });
+            
             fileMenu.addSeparator();
             JMenuItem fileExitMenuItem = new JMenuItem("Exit");
             fileMenu.add(fileExitMenuItem);
           menuBar.add(fileMenu);
+          
+          fileExitMenuItem.addActionListener(new ActionListener(){
+              
+              public void actionPerformed(ActionEvent e){
+                System.exit(0);  
+              }
+          });
+          
           JMenu helpMenu = new JMenu("Help");
             JMenuItem helpAboutMenuItem = new JMenuItem("About");
             helpMenu.add(helpAboutMenuItem);
           menuBar.add(helpMenu);
+          
+          helpAboutMenuItem.addActionListener(new ActionListener(){
+              
+              public void actionPerformed(ActionEvent e){
+                  Component frame = null;
+                  JOptionPane.showMessageDialog(frame, "This is a Drawing application that allows you to draw a simplar version of paint!!!");
+              }
+          });
+          
         add(menuBar, BorderLayout.PAGE_START);
         
+    
         // Control Panel
         controlPanel = new JPanel();
           controlPanel.setBorder(new TitledBorder(new EtchedBorder(), "Control Panel"));
