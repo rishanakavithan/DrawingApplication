@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import static jdk.internal.org.jline.utils.Colors.h;
+import javax.swing.Timer;
 
 
 public class NBDrawApp1 extends JFrame
@@ -37,6 +38,12 @@ public class NBDrawApp1 extends JFrame
     private int lineCount = 0;
     private int startX,startY;
     private int tempX, tempY, tempWidth, tempHeight;
+// Global variables for direction
+    private int dxRectangle = 5;
+    private int dyRectangle = 5; // Rectangle movement
+    private int dxOval = 5;
+    private int dyOval = 5;           // Oval movement
+        
     
 
 
@@ -114,18 +121,22 @@ public class NBDrawApp1 extends JFrame
             }
 
       }
+            
  }
       public void mouseReleased(MouseEvent event){
           isMousePressed = false;
           
             if (rectangleRadioButton.isSelected()) {
                 rectCount++; 
+                rectColor[rectCount - 1] = SelectedColour; 
             canvas.repaint();}
             else if (ovalRadioButton.isSelected()){
                 ovalCount++; 
+                ovalColor[ovalCount - 1] = SelectedColour;
             canvas.repaint();}
             else if(lineRadioButton.isSelected()){
                 lineCount++;
+                lineColor[lineCount - 1] = SelectedColour; 
             canvas.repaint();}
                 }
     
@@ -356,17 +367,9 @@ public class NBDrawApp1 extends JFrame
                     fis.close();
                     
                     canvas.repaint();
-                    
-                    JOptionPane.showMessageDialog(null,"Your Drawing is being opened");
-                    
-                    System.out.println("Loaded rectCount: " + rectCount);
-                    System.out.println("Loaded rectangle[0]: " + rectangle[0][0]);
-                    System.out.println("Loaded color: " + rectColor[0]);
-
-      
-                    
+               
                 }else {
-                System.out.println("User canceled the file chooser.");
+                JOptionPane.showMessageDialog(null,"Your Drawing is being opened");
             }
                 }   catch (ClassNotFoundException ex) {
                         Logger.getLogger(NBDrawApp1.class.getName()).log(Level.SEVERE, null, ex);
@@ -516,7 +519,75 @@ public class NBDrawApp1 extends JFrame
             }
         }
     });
+        // Animate button 
+        
 
+        animateButton = new JButton("Animate");
+          animateButton.setPreferredSize(new Dimension(CONTROL_PANEL_WIDTH - 20, 50));
+        controlPanel.add(animateButton);
+        
+        
+        Timer animationTimer;
+        animationTimer = new Timer(200,new ActionListener (){
+            public void actionPerformed(ActionEvent e){
+                
+                try{
+                    if(rectangle !=null && rectangle.length>0){
+                         for (int i = 0; i < rectangle.length; i++) {
+                        rectangle[i][0] += dxRectangle;
+                        rectangle[i][1] += dyRectangle;
+                        
+                        // Check for collisions with canvas edges
+                        if (rectangle[i][0] <= 0 || rectangle[i][0] + rectangle[i][2] >= canvas.getWidth()) {
+                            dxRectangle = -dxRectangle; // Reverse horizontal direction
+                        }
+                        if (rectangle[i][1] <= 0 || rectangle[i][1] + rectangle[i][3] >= canvas.getHeight()) {
+                            dyRectangle = -dyRectangle; // Reverse vertical direction
+                        }
+                    }
+                    }
+                    
+                    if(oval !=null && oval.length>0){
+                        for(int i =0; i <oval.length; i++){
+                        oval[i][0] += dxOval;
+                        oval[i][1] += dyOval;
+                        
+                        // Check for collisions with canvas edges
+                        if (oval[i][0] <= 0 || oval[i][0] + oval[i][2] >= canvas.getWidth()) {
+                            dxOval = -dxOval; // Reverse horizontal direction
+                        }
+                        if (oval[i][1] <= 0 || oval[i][1] + oval[i][3] >= canvas.getHeight()) {
+                            dyOval = -dyOval; // Reverse vertical direction
+                        }
+                    }
+                    }
+                    
+                    canvas.repaint();
+                }catch(Exception ex){
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        animateButton.addActionListener(new ActionListener(){
+
+            public void actionPerformed(ActionEvent e){
+   
+                if ((rectangle !=null && rectangle.length > 0 )|| (oval !=null && oval.length > 0 )){
+                    if(animationTimer.isRunning()){
+                        animationTimer.stop();
+                        animateButton.setText("Animate");
+                    }else{
+                        animationTimer.start();
+                        animateButton.setText("Stop Animation");
+                    }
+                } else{
+                    JOptionPane.showMessageDialog(null,"No shapes to animate");
+                }
+            }
+            
+        });
+        
         // Clear button
         clearButton = new JButton("Clear Canvas");
           clearButton.setPreferredSize(new Dimension(CONTROL_PANEL_WIDTH - 20, 50));
@@ -541,6 +612,7 @@ public class NBDrawApp1 extends JFrame
             
             messageArea.setText("Canvas Cleared! You have " + MAX_FREEHAND_PIXELS + " Freehand left & " + MAX_SHAPES + " Shapes Left!!!");
             canvas.repaint();
+            animationTimer.stop();
     
 
 
@@ -548,10 +620,7 @@ public class NBDrawApp1 extends JFrame
         }
     });
 
-        // Animate button 
-        animateButton = new JButton("Animate");
-          animateButton.setPreferredSize(new Dimension(CONTROL_PANEL_WIDTH - 20, 50));
-        controlPanel.add(animateButton);
+
         
         // that completes the control panel section
 
@@ -719,3 +788,4 @@ public class NBDrawApp1 extends JFrame
     } // end main method
     
 } // end of NBDrawApp1 class
+
